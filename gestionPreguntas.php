@@ -1,3 +1,8 @@
+<?php
+session_start();
+if (!isset($_SESSION['email']))
+    header("Location: login.php");
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,59 +24,24 @@
         <span class="right"><a href="logout.php">Logout</a></span>
         <span class='right'>
             <?php
-            include "configDB.php";
-            $link = mysqli_connect($server,$user,$pass,$basededatos);
-            // Check connection
-            if (mysqli_connect_errno())
-            {
-                echo "Failed to connect to MySQL: " . mysqli_connect_error();
-            }
-            $email = $_GET['email'];
-            $result = mysqli_query($link,"SELECT foto FROM usuarios WHERE email = '$email'");
-            while($row = mysqli_fetch_array($result))
-            {
-                echo '<img height="60" width="60" src="data:image/*;base64,'.base64_encode($row['foto']).' "/>';
-            }
-            ?>
-        </span>
-        <span>
-            <?php
-            /*
-            if(!$assessmentItems = simplexml_load_file('preguntas.xml')){
-                echo "No se ha podido cargar el archivo";
-            } else {
-                echo '<table border="1">';
-                echo '<tr>';
-                echo '<th>Autor</th>';
-                echo '<th>Pregunta</th>';
-                echo '<th>Respuesta Correcta</th>';
-                echo '<th>Respuestas Incorrectas</th>';
-                echo '</tr>';
-
-                foreach ($assessmentItems as $assessmentItem){
-                    echo '<tr>';
-                    echo '<th>'.$assessmentItem["author"].'</th>';
-                    echo '<th>'.$assessmentItem->itemBody->p.'</th>';
-                    echo '<th>'.$assessmentItem->correctResponse->value.'</th>';
-                    echo '<th>'.$assessmentItem->incorrectResponses->value[0].'<br>'.
-                        $assessmentItem->incorrectResponses->value[1].'<br>'.
-                        $assessmentItem->incorrectResponses->value[2].'</th>';
-                    echo '</tr>';
-
-                }
-                echo '</table>';
-            }*/
+                echo '<img height="60" width="60" src="data:image/*;base64,'.$_SESSION['foto'].' "/>';
             ?>
         </span>
         <h2>Quiz: el juego de las preguntas</h2>
     </header>
     <nav class='main' id='n1' role='navigation'>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'layout2.php?email='. $_GET['email'];} else echo 'layout2.php'?>>Inicio</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'gestionPreguntas.php?email='.$_GET['email'];}else echo 'gestionPreguntas.php'?>>Gestionar Preguntas</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'creditos2.php?email='.$_GET['email'];} else echo 'creditos2.php'?>>Creditos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'obtenerDatos.php?email='.$_GET['email'];}else echo 'obtenerDatos.php'?>>Obtener Datos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'verPreguntasXML.php?email='.$_GET['email'];}else echo 'verPreguntasXML.php'?>>Ver tabla XML</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'preguntas.xml?email='.$_GET['email'];}else echo 'preguntas.xml'?>>Ver tabla XSL</a></span></nav>
+        <span><a href="layout2.php">Inicio</a></span>
+        <span><a href="gestionPreguntas.php">Gestionar Preguntas</a></span>
+        <span><a href="creditos2.php">Creditos</a></span>
+        <span><a href="obtenerDatos.php">Obtener Datos</a></span>
+        <span><a href="obtenerPreguntaId.php">Ver preguntas por ID</a></span>
+        <span><a href="verPreguntasXML.php">Ver tabla XML</a></span>
+        <span><a href="preguntas.xml">Ver tabla XSL</a></span>
+        <?php
+        if($_SESSION['rol'] == 0)
+            echo '<span><a href="gestionarCuentas.php">Gestionar Cuentas (admin)</a></span>';
+        ?>
+    </nav>
     <section class="main" id="s1">
         <table border="1">
             <tr>
@@ -87,10 +57,10 @@
 
         <div>
             <button id="verPreguntasBtn" type="button" onclick="verPreguntas()">Ver Preguntas</button>
-            <form  method='post' id='questionForm' name='questionForm' enctype="multipart/form-data" action=<?php echo 'prueba.php?email='. $_GET['email'];?> >
+            <form  method='post' id='questionForm' name='questionForm' enctype="multipart/form-data" action="prueba.php" >
                 <table>
                     <tr>
-                        <td align="left">Email*: <input id="email" name="email" type="text" class="emailComplexSubj" value=<?php echo $_GET['email'];?> required placeholder="Introduce un correo de la UPV-EHU."  pattern="^[a-z]+[0-9]{3}@ikasle\.ehu\.eus$" readonly="true"></td>
+                        <td align="left">Email*: <input id="email" name="email" type="text" class="emailComplexSubj" value=<?php echo $_SESSION['email'];?> required placeholder="Introduce un correo de la UPV-EHU."  pattern="^[a-z]+[0-9]{3}@ikasle\.ehu\.eus$" readonly="true"></td>
                     </tr>
                     <tr>
                         <td align="left">Enunciado de la pregunta*: <input id="question" name="question" type="text" class="response" required placeholder="Introduce una pregunta de al menos 10 carácteres." pattern="^.{10,}$"></td>
@@ -137,43 +107,6 @@
 </div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
-/*    function verPreguntas() {
-        xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                document.getElementById('verPreguntas').innerHTML = '';
-                var xmlResponse = xmlhttp.responseXML;
-                var assessmentItem = xmlResponse.getElementsByTagName('assessmentItem');
-                console.log(assessmentItem);
-                var tbl = document.createElement('table');
-                tbl.setAttribute('border', '1');
-                var url = window.location.search.substring(1);
-                var email = url.split('=')[1];
-                alert(assessmentItem.length);
-                for (var i = 0; i < assessmentItem.length; i++) {
-                    console.log(assessmentItem[i].childNodes[1].childNodes[1].childNodes[0].nodeValue);
-                    if (assessmentItem[i].attributes[1].nodeValue === email){
-                        alert(assessmentItem[i].childNodes[1].childNodes[1].childNodes[0].nodeValue);
-                        var tr = document.createElement('tr');
-                        var td = [document.createElement('td'),  document.createElement('td'),  document.createElement('td')];
-                        td[0].appendChild(document.createTextNode(assessmentItem[i].childNodes[1].childNodes[1].childNodes[0].nodeValue));
-                        td[1].appendChild(document.createTextNode(assessmentItem[i].childNodes[1].childNodes[1].childNodes[0].nodeValue));
-                        td[2].appendChild(document.createTextNode(assessmentItem[i].childNodes[1].childNodes[1].childNodes[0].nodeValue));
-                        tr.appendChild(td[0]);
-                        tr.appendChild(td[1]);
-                        tr.appendChild(td[2]);
-                        tbl.appendChild(tr);
-                    }
-                }
-                document.getElementById('verPreguntas').appendChild(tbl);
-                //document.getElementById("verPreguntas").innerHTML=xmlResponse.childNodes}
-            }
-        };
-        xmlhttp.open('GET', 'preguntas.xml', true);
-        xmlhttp.send();
-    }*/
-const urlParams = new URLSearchParams(window.location.search);
-
 setInterval(cuentaPreguntas,5000);
 setInterval(numUsuarios,4000);
 
@@ -185,27 +118,22 @@ setInterval(numUsuarios,4000);
                 obj1.innerHTML = XMLHttpRequestObject.responseText;
             }
         };
-        var email = urlParams.get('email');
-        XMLHttpRequestObject.open('GET', 'verPreguntasXML.php?email='+email+'&op=getContador', true);
+        XMLHttpRequestObject.open('GET', 'verPreguntasXML.php?op=getContador', true);
         XMLHttpRequestObject.send();
     }
     function numUsuarios(){
         XMLHttpRequestObject = new XMLHttpRequest();
         XMLHttpRequestObject.onreadystatechange = function () {
             if (XMLHttpRequestObject.readyState == 4 && XMLHttpRequestObject.status == 200) {
-                //alert("EYYY3");
                 var obj2 = document.getElementById('numUsuarios');
-                console.log(XMLHttpRequestObject);
                 obj2.innerHTML = XMLHttpRequestObject.responseText;
             }
         };
-        var email = urlParams.get('email');
         XMLHttpRequestObject.open('GET', 'verConectadosXML.php', true);
         XMLHttpRequestObject.send();
     }
     function verPreguntas(){
         XMLHttpRequestObject = new XMLHttpRequest();
-        var email = urlParams.get('email');
         //alert(email);
 
         XMLHttpRequestObject.onreadystatechange = function () {
@@ -214,7 +142,7 @@ setInterval(numUsuarios,4000);
                 obj.innerHTML = XMLHttpRequestObject.responseText;
             }
             };
-        XMLHttpRequestObject.open('GET', 'verPreguntasXML.php?email='+email, true);
+        XMLHttpRequestObject.open('GET', 'verPreguntasXML.php', true);
         XMLHttpRequestObject.send();
     }
 

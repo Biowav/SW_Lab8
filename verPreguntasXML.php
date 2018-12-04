@@ -1,5 +1,5 @@
-
 <?php
+session_start();
 if(!$assessmentItems = simplexml_load_file('preguntas.xml')){
     echo "No se ha podido cargar el archivo";
 } else {
@@ -7,7 +7,7 @@ if(!$assessmentItems = simplexml_load_file('preguntas.xml')){
         $preguntasUsuario=0;
         $preguntasTotales=0;
         foreach ($assessmentItems as $assessmentItem){
-            if($assessmentItem['author'] == $_GET['email'])
+            if($assessmentItem['author'] == $_SESSION['email'])
                 $preguntasUsuario++;
             $preguntasTotales++;
         }
@@ -23,7 +23,7 @@ if(!$assessmentItems = simplexml_load_file('preguntas.xml')){
         echo '</tr>';
 
         foreach ($assessmentItems as $assessmentItem){
-            if($assessmentItem['author'] == $_GET['email']){
+            if($assessmentItem['author'] == $_SESSION['email']){
                 echo '<tr>';
                 echo '<th>'.$assessmentItem["author"].'</th>';
                 echo '<th>'.$assessmentItem->itemBody->p.'</th>';

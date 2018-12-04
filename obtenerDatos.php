@@ -1,3 +1,8 @@
+<?php
+session_start();
+if (!isset($_SESSION['email']))
+    header("Location: login.php");
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,30 +24,23 @@
         <span class="right"><a href="layout.php">Logout</a></span>
         <span>
             <?php
-            include "configDB.php";
-            $link = mysqli_connect($server,$user,$pass,$basededatos);
-            // Check connection
-            if (mysqli_connect_errno())
-            {
-                echo "Failed to connect to MySQL: " . mysqli_connect_error();
-            }
-            $email = $_GET['email'];
-            $result = mysqli_query($link,"SELECT foto FROM usuarios WHERE email = '$email'");
-            while($row = mysqli_fetch_array($result))
-            {
-                echo '<img height="60" width="60" src="data:image/*;base64,'.base64_encode($row['foto']).' "/>';
-            }
+            echo '<img height="60" width="60" src="data:image/*;base64,'.$_SESSION['foto'].' "/>';
             ?>
         </span>
         <h2>Quiz: el juego de las preguntas</h2>
     </header>
     <nav class='main' id='n1' role='navigation'>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'layout2.php?email='. $_GET['email'];} else echo 'layout2.php'?>>Inicio</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'gestionPreguntas.php?email='.$_GET['email'];}else echo 'gestionPreguntas.php'?>>Gestionar Preguntas</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'creditos2.php?email='.$_GET['email'];} else echo 'creditos2.php'?>>Creditos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'obtenerDatos.php?email='.$_GET['email'];}else echo 'obtenerDatos.php'?>>Obtener Datos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'verPreguntasXML.php?email='.$_GET['email'];}else echo 'verPreguntasXML.php'?>>Ver tabla XML</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'preguntas.xml?email='.$_GET['email'];}else echo 'preguntas.xml'?>>Ver tabla XSL</a></span></nav>
+        <span><a href="layout2.php">Inicio</a></span>
+        <span><a href="gestionPreguntas.php">Gestionar Preguntas</a></span>
+        <span><a href="creditos2.php">Creditos</a></span>
+        <span><a href="obtenerDatos.php">Obtener Datos</a></span>
+        <span><a href="obtenerPreguntaId.php">Ver preguntas por ID</a></span>
+        <span><a href="verPreguntasXML.php">Ver tabla XML</a></span>
+        <span><a href="preguntas.xml">Ver tabla XSL</a></span>
+        <?php
+        if($_SESSION['rol'] == 0)
+            echo '<span><a href="gestionarCuentas.php">Gestionar Cuentas (admin)</a></span>';
+        ?>
     </nav>
     <section class="main" id="s1" >
         <form id='xmlForm' name='xmlForm'>

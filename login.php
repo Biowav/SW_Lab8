@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -30,7 +33,7 @@
             <form  method='post' id='loginForm' name='loginForm' enctype="multipart/form-data" action="login.php" >
                 <table id="tabla-registro">
                     <tr>
-                        <td align="left">Email*: <input id="email" name="email" type="text" class="login" required placeholder="Introduce un correo de la UPV-EHU."  pattern="^[a-z]+[0-9]{3}@ikasle\.ehu\.eus$"></td>
+                        <td align="left">Email*: <input id="email" name="email" type="text" class="login" required placeholder="Introduce un correo de la UPV-EHU."  pattern="^([a-z]+[0-9]{3}@ikasle\.ehu\.eus)|(admin@ehu\.es)$"></td>
                     </tr>
                     <tr>
                         <td align="left">Contraseña*: <input id="password" name="password" type="password" class="login" required placeholder="Introduce una contrasñea de mínimo 6 caracteres alfanuméricos"  pattern="^.{6,}$"></td>
@@ -40,26 +43,42 @@
                     </tr>
                 </table>
             </form>
+            <a href='recuperarPass.php'>¿Has olvidado la contraseña?</a>
             <?php
             if(isset($_POST['submit'])) {
                 include "configDB.php";
-
                 $link = mysqli_connect($server, $user, $pass, $basededatos);
                 $email = trim($_POST['email']);
                 $password = trim($_POST['password']);
-                $sql = "SELECT email,password FROM usuarios WHERE email='$email'";
+                $sql = "SELECT email,password,foto FROM usuarios WHERE email='$email'";
                 $res = mysqli_query($link, $sql);
                 $row = mysqli_fetch_array( $res);
+
                 if(!$row){
                     echo "Email incorrecto";
                     return;
                 }
-                if($row['password'] != $password){
-                    echo "Contraseña Incorrecta";
-                    return;
+                if($email=="admin@ehu.es"){
+                    if($password!="admin000"){
+                        echo "Contraseña Incorrecta";
+                        return;
+                    }
                 }
+                else{
+                    if(!password_verify($password,$row['password'])){
+                        echo "Contraseña Incorrecta";
+                        return;
+                    }
+                }
+                $_SESSION['email'] = $row['email'];
+                $_SESSION['password'] = $row['password'];
+                $_SESSION['foto'] = base64_encode($row['foto']);
+                if($row['email'] === 'admin@ehu.es')
+                    $_SESSION['rol'] = 0; //admin
+                else
+                    $_SESSION['rol'] = 1;
                 mysqli_close($link);
-                header("Location: layout2.php?email=".$row['email']);
+                header("Location: layout2.php");
 
                 /*Actualizar el contador*/
                 if (file_exists('contador.xml')) {

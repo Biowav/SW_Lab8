@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html>
   <head>
@@ -28,7 +31,7 @@
     <section class="main" id="s1" >
     
 	<div style="font-weight: bold ; font-size: large">
-        <form  method='post' id='registroForm' name='registroForm' enctype="multipart/form-data" action="registro.php" >
+        <form  method='post' id='registroForm' name='registroForm' enctype="multipart/form-data" action="registro.php" onsubmit= "return check()">
             <table id="tabla-registro">
                 <tr>
                     <td align="left">Email*: <input id="email" name="email" type="text" class="login" required placeholder="Introduce un correo de la UPV-EHU."  pattern="^[a-z]+[0-9]{3}@ikasle\.ehu\.eus$"></td>
@@ -58,7 +61,7 @@
                 include "configDB.php";
                 $link = mysqli_connect($server,$user,$pass,$basededatos);
                 $email = trim($_POST['email']);
-                $password = trim($_POST['password']);
+                $password = password_hash(trim($_POST['password']),PASSWORD_DEFAULT);
                 $nombreApellido = trim($_POST['nombreApellido']);
                 if($_FILES['fotoUsuario']['tmp_name']!="")
                     $img = mysqli_real_escape_string($link,file_get_contents($_FILES['fotoUsuario']['tmp_name']));
@@ -66,10 +69,16 @@
                     $img = mysqli_real_escape_string($link, file_get_contents("anonimo.jpg"));
                 $sql = "INSERT INTO usuarios(email, nombreApellido, password,foto) VALUES ('$email','$nombreApellido','$password', '$img')";
                 if (!mysqli_query($link, $sql)) {
-                    die('Error: Fallo en el servidor, pruebe mas tarde.');
+                    die('Error: Fallo en el servidor, recarga la página.');
                 }
                 echo "Registro completado correctamente.<br>";
-                echo "Para Insertar preguntas clica aquí" . "<a href='preguntaHTML5.php'>aquí</a>";
+                $sql = "SELECT foto FROM usuarios WHERE email='$email'";
+                $res = mysqli_query($link, $sql);
+                $row = mysqli_fetch_array( $res);
+                $_SESSION['email'] = $email;
+                $_SESSION['password'] = $password;
+                $_SESSION['foto'] = base64_encode($row['foto']);
+                $_SESSION['rol'] = 1;
                 mysqli_close($link);
                 if (file_exists('contador.xml')) {
                     $contador = simplexml_load_file('contador.xml');
@@ -78,9 +87,12 @@
                 }
                 $contador->usuariosOnline=$contador->usuariosOnline + 1;
                 $contador->asXML('contador.xml');
-                header("Location: layout2.php?email=".$email);
+                header("Location: layout2.php");
             }
         ?>
+        <div id="respuesta">
+
+        </div>
 	</div>
     </section>
 	<footer class='main' id='f1'>
@@ -89,6 +101,27 @@
 </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script>
+      var validEmail=false;
+      var validPassword=false;
+      $("#password").change(function() {
+          XMLHttpRequestObject = new XMLHttpRequest();
+          XMLHttpRequestObject.onreadystatechange = function () {
+              if (XMLHttpRequestObject.readyState == 4 && XMLHttpRequestObject.status == 200) {
+                  var obj1 = document.getElementById('respuesta');
+                  if (XMLHttpRequestObject.responseText === 'VALIDA'){
+                      obj1.innerHTML = 'Contraseña valida.';
+                      validPassword = true;
+                  }else if(XMLHttpRequestObject.responseText === 'INVALIDA'){
+                      obj1.innerHTML = 'Su contraseña no es segura.';
+                      validPassword = false;
+                  }else
+                      obj1.innerHTML = 'Error en el servidor';
+              }
+          };
+          var password =$('#password').val();
+          XMLHttpRequestObject.open('GET', 'comprobarPass.php?password='+password, true);
+          XMLHttpRequestObject.send();
+      });
       $("#password2").change(function() {
           if($("#password").val() != $("#password2").val()){
               alert("La contraseña no coincide.");
@@ -102,6 +135,26 @@
           }
           else return true;
       });
+      $("#email").change(
+          function () {
+              XMLHttpRequestObject = new XMLHttpRequest();
+              XMLHttpRequestObject.onreadystatechange = function () {
+                  if (XMLHttpRequestObject.readyState == 4 && XMLHttpRequestObject.status == 200) {
+                      var obj1 = document.getElementById('respuesta');
+                      if (XMLHttpRequestObject.responseText === 'SI'){
+                          obj1.innerHTML = 'Usuario correcto';
+                          validEmail=true;
+                      }else{
+                          obj1.innerHTML = 'El usuario no se encuentra en la base de datos de la EHU';
+                          validEmail=false;
+                      }
+                  }
+              };
+              var email =$('#email').val();
+              XMLHttpRequestObject.open('GET', 'comprobarEmail.php?email='+email, true);
+              XMLHttpRequestObject.send();
+          }
+      );
 
       function readURL(input) {
           if (input.files && input.files[0]) {
@@ -118,6 +171,19 @@
       $("#fotoUsuario").change(function() {
           readURL(this);
       });
+
+      function check() {
+
+          if (!validEmail){
+              alert("Introduce un email valido");
+              return false;
+          }
+          else if(!validPassword){
+              alert("Introduce una contraseña mas segura");
+              return false;
+          }else
+              return true;
+      }
   </script>
 </body>
 </html>

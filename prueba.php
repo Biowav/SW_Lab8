@@ -1,3 +1,6 @@
+<?php
+session_start();
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -27,7 +30,7 @@
             {
                 echo "Failed to connect to MySQL: " . mysqli_connect_error();
             }
-            $email = $_GET['email'];
+            $email = $_SESSION['email'];
             $result = mysqli_query($link,"SELECT foto FROM usuarios WHERE email = '$email'");
             while($row = mysqli_fetch_array($result))
             {
@@ -38,23 +41,18 @@
         <h2>Quiz: el juego de las preguntas</h2>
     </header>
     <nav class='main' id='n1' role='navigation'>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'layout2.php?email='. $_GET['email'];} else echo 'layout2.php'?>>Inicio</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'gestionPreguntas.php?email='.$_GET['email'];}else echo 'gestionPreguntas.php'?>>Gestionar Preguntas</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'creditos2.php?email='.$_GET['email'];} else echo 'creditos2.php'?>>Creditos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'obtenerDatos.php?email='.$_GET['email'];}else echo 'obtenerDatos.php'?>>Obtener Datos</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'verPreguntasXML.php?email='.$_GET['email'];}else echo 'verPreguntasXML.php'?>>Ver tabla XML</a></span>
-        <span><a href=<?php if (isset($_GET['email'])) { echo 'preguntas.xml?email='.$_GET['email'];}else echo 'preguntas.xml'?>>Ver tabla XSL</a></span></nav>
-    </nav>
+        <span><a href="layout2.php">Inicio</a></span>
+        <span><a href="gestionPreguntas.php">Gestionar Preguntas</a></span>
+        <span><a href="creditos2.php">Creditos</a></span>
+        <span><a href="obtenerDatos.php">Obtener Datos</a></span>
+        <span><a href="obtenerPreguntaId.php">Ver preguntas por ID</a></span>
+        <span><a href="verPreguntasXML.php">Ver tabla XML</a></span>
+        <span><a href="preguntas.xml">Ver tabla XSL</a></span></nav>
     <section class="main" id="s1" >
 
         <div style="font-weight: bold ; font-size: large">
             <?php
             include "configDB.php";
-            /*
-            if (!(isset($_POST['email'])&&isset($_POST['question'])&&isset($_POST['correct'])&&isset($_POST['incorrect1'])
-                &&isset($_POST['incorrect2'])&& isset($_POST['incorrect3'])&&isset($_POST['complexity'])
-                &&isset($_POST['subject']))){echo 'Error: Fallo en el servidor, pruebe mas tarde.'; return;}
-            */
             $link = mysqli_connect($server,$user,$pass,$basededatos);
             $email = trim($_POST['email']);
             $enunciado = trim($_POST['question']);
@@ -65,7 +63,7 @@
             $complejidad = trim($_POST['complexity']);
             $tema = trim($_POST['subject']);
 
-            if(preg_match("/^[a-z]+[0-9]{3}@ikasle\.ehu\.eus$/",$email)!=1 ||
+            if(preg_match("/^([a-z]+[0-9]{3}@ikasle\.ehu\.eus)|(admin@ehu.es)$/",$email)!=1 ||
                 preg_match("/^.{10,}$/",$enunciado)!=1 ||
                 preg_match("/^[0-5]$/",$complejidad)!=1 ||
                 empty($correct) ||

@@ -21,16 +21,15 @@ if (!isset($_SESSION['email']))
   <body>
   <div id='page-wrap'>
 	<header class='main' id='h1'>
-      		<span class="right"><a href="logout.php">Logout</a></span>
+        <span class="right"><a href="logout.php">Logout</a></span>
         <span>
             <?php
-                echo '<img height="60" width="60" src="data:image/*;base64,'.$_SESSION['foto'].' "/>';
+            echo '<img height="60" width="60" src="data:image/*;base64,'.$_SESSION['foto'].' "/>';
             ?>
         </span>
 		<h2>Quiz: el juego de las preguntas</h2>
     </header>
 	<nav class='main' id='n1' role='navigation'>
-
         <span><a href="layout2.php">Inicio</a></span>
         <span><a href="gestionPreguntas.php">Gestionar Preguntas</a></span>
         <span><a href="creditos2.php">Creditos</a></span>
@@ -43,11 +42,11 @@ if (!isset($_SESSION['email']))
             echo '<span><a href="gestionarCuentas.php">Gestionar Cuentas (admin)</a></span>';
         ?>
     </nav>
+    <section class="main" id="s1" >
+    <input id="idPregunta" type="text">
+    <button id="idbtn" type="button">Ver preguntas</button>
+	<div id="mostrarPreguntas" style="font-weight: bold ; font-size: large">
 
-    <section class="main" id="s1">
-    
-	<div>
-		<img id="image" src="http://britishclublaspalmas.es/wp-content/uploads/2017/01/English-Grammar-Quiz-Time.png"/>
 	</div>
     </section>
 	<footer class='main' id='f1'>
@@ -56,12 +55,18 @@ if (!isset($_SESSION['email']))
 </div>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
   <script>
-      $('#logout').click(function () {
-          $.get('contador.xml',function (d) {
-              var usuariosOnline = $(d).find('usuariosOnline');
-              usuariosOnline.text=usuariosOnline.text-1;
-          })
-      });
+      $('#idbtn').click(function () {
+          XMLHttpRequestObject = new XMLHttpRequest();
+          XMLHttpRequestObject.onreadystatechange = function () {
+              if (XMLHttpRequestObject.readyState == 4 && XMLHttpRequestObject.status == 200) {
+                  var obj = document.getElementById('mostrarPreguntas');
+                  obj.innerHTML = XMLHttpRequestObject.responseText;
+              }
+          };
+          XMLHttpRequestObject.open('GET', 'obtenerPregunta.php?id='+$('#idPregunta').val(), true);
+          XMLHttpRequestObject.send();
+          }
+      )
   </script>
 </body>
 </html>
